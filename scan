@@ -1,0 +1,101 @@
+#!/bin/bash
+
+DIRNAME="/home/ftps/Pictures/Scan/"
+DEVICE="pixma:04A91769_10C74E"
+FORMAT="png"
+FILE="scan-$(date +"%F")_$(date +"%H-%M-%S")"
+EXTRA="-B -p"
+RES="300"
+print="echo -e"
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -f | --format )
+            shift
+            if [ "$1" = "" ]; then
+                $print "Incorrect input."
+                exit -1
+            fi
+            FORMAT=$1
+            [ "$FORMAT" = "jpg" ] && FORMAT="jpeg"
+            ;;
+        -d | --dir )
+            shift
+            if [ "$1" = "" ]; then
+                $print "Incorrect input."
+                exit -1
+            fi
+            DIRNAME="$1"
+            if [ ! -d $DIRNAME ]; then
+                $print "Not a valid directory to save."
+                exit -2
+            fi
+            ;;
+        -n | --name )
+            shift
+            if [ "$1" = "" ]; then
+                $print "Incorrect input."
+                exit -1
+            fi
+            FILE="$1"
+            ;;
+        -s | --size )
+            shift
+            if [ "$1" = "" -o "$2" = "" ]; then
+                $print "Incorrect input."
+                exit -1
+            fi
+            EXTRA="$EXTRA -x $1 -y $2"
+            shift
+            shift
+            ;;
+        -r | --res )
+            shift
+            if [ "$1" = "" ]; then
+                $print "Incorrect input."
+                exit -1
+            fi
+            [ $1 -le 600 -a $1 -ge 50 ] && RES=$1
+            shift
+            ;;
+        -h | --help )
+            $print "Use as following:\n"
+            $print "scan -f|--format [format] -d|--dir [dir to save scan] -n|--name [name of scan without extension]"
+            $print "-s|--size [x in mm] [y in mm] -r|--res [dpi between 50 and 600]\n"
+            $print "defaults:"
+            $print "dir: $DIRNAME \nname: $FILE.$FORMAT \nsize: A4 \nres: $RES dpi \n"
+            $print "Use scan -L to list available devices.\n"
+            exit 0
+            ;;
+        -L | --List )
+            scanimage -L
+            exit 2
+            ;;
+        * )
+            $print "Unknown option."
+            exit -3
+    esac
+    shift
+done
+
+
+file_name="${DIRNAME}${FILE}.${FORMAT}"
+
+if [ -f "$file_name" ]; then
+    for((i=1; ; i++)); do
+        file_name="${DIRNAME}${FILE}($i).${FORMAT}"
+        if [ -f "$file_name" ]; then
+            continue
+        else
+            break
+        fi
+    done
+fi
+
+$print "Scanning item with $RES dpi, in $FORMAT format to $file_name\n"
+
+scanimage $EXTRA --resolution $RES -d $DEVICE --format=$FORMAT >"$file_name"
+$print "\n"
+exit 1
+
+# -x 90 -y 60 for CC
