@@ -2,13 +2,79 @@
 
 NAME="exe"
 LIBS="-lm"
-CFLAGS=""
+CFLAGS="-Wall -pedantic"
+CC="gcc"
+c="c"
+h="h"
+optimization=0
+compiler=0
+print="echo -e"
+
+while [ "$1" != "" ]; do
+	case $1 in
+		-c )
+			if [ "$compiler" != "1" ]; then
+				compiler=1
+			else
+				printf "ERROR:\n"
+				printf "Only one compiler option must be used (-c or -cpp).\n"
+				printf "Run genmake -h for help\n"
+				exit -3
+			fi
+			;;
+		-cpp )
+			if [ "$compiler" != "1" ]; then
+				compiler=1
+				CC="g++"
+				c="cpp"
+				h="hpp"
+			else
+				printf "ERROR:\n"
+				printf "Only one compiler option must be used (-c or -cpp).\n"
+				printf "Run genmake -h for help\n"
+				exit -3
+			fi
+			;;
+		-o0 | -o1 | -o2 | -o3 )
+			if [ "$optimization" != "1" ]; then
+				CFLAGS="$CFLAGS $1"
+				optimization=1
+			else
+				printf "ERROR:\n"
+				printf "Only one optimization option should be used: -oX\n"
+				printf "Run genmake -h for help\n"
+				exit -2
+			fi
+			;;
+		-r | --remove )
+			rm makefile
+			exit 0
+			;;
+		-h | --help )
+			$print "Program that generates a makefile for compiling C/C++ code\n\n"
+			$print "Usage: genmake -[options]\n"
+			$print "Options:"
+			$print "-c: compiles C code (default)"
+			$print "-cpp: compiles C++ code"
+			$print "-r | --remove: removes the makefile"
+			$print "-o[x]: optimization level x (o0 to o3)"
+			$print "-h | --help: prints this help information"
+			exit 0
+			;;
+		* )
+			printf "ERROR:\n"
+			printf "Unknown option: $1\n"
+			printf "Run genmake -h for help\n"
+			exit -1
+	esac
+	shift
+done
 
 touch makefile
 
-echo -e "TARGET = $NAME
+$print "TARGET = $NAME
 LIBS = $LIBS
-CC = gcc
+CC = $CC
 CFLAGS = $CFLAGS
 
 .PHONY: default all clean
@@ -16,8 +82,8 @@ CFLAGS = $CFLAGS
 default: \$(TARGET)
 all: default
 
-OBJECTS = \$(patsubst %.c, %.o, \$(wildcard *.c))
-HEADERS = \$(wildcard *.h)
+OBJECTS = \$(patsubst %.$c, %.o, \$(wildcard *.$c))
+HEADERS = \$(wildcard *.$h)
 
 %.o: %.c \$(HEADERS)
 	\$(CC) \$(CFLAGS) -c \$< -o \$@
@@ -32,3 +98,4 @@ clean:
 	-rm -f \$(TARGET)
 	-rm -f *.o
 " > makefile
+exit 0
