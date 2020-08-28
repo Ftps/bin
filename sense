@@ -1,0 +1,23 @@
+#!/bin/bash
+
+input=''
+
+stty -echo
+
+while :
+do
+	clear
+	echo -e "*** CPU TEMPERATURE ***\n"
+	sensors
+
+	echo -e "Press F10 to quit."
+
+	read -t 2 -N 1 input
+
+	if [ "~" == "$input" ]; then
+		break
+	fi
+done
+
+clear
+stty echo
