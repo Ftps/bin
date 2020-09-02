@@ -6,11 +6,12 @@ stty -echo
 
 while :
 do
-	clear
-	echo -e "*** CPU TEMPERATURE ***\n"
+	echo -e "\n\n\n\n*** Sensors ***\n"
 	sensors
+	echo -e " "
+	nvidia-smi
 
-	echo -e "Press F10 to quit."
+	echo -e "\nPress F10 to quit."
 
 	read -t 2 -N 1 input
 
